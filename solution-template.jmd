@@ -92,7 +92,6 @@ unmet demand has to be positive, and the sum of met and unmet demand sums to the
 it is impossible to produce moreelectriity than is required, making a 4th constraint obsolete.
 
 ## Problem 1.4
-basically using solver
 ```julia
 Generators = ["Geothermal", "Coal", "CCGT", "CT", "Wind", "Solar"];
 G = 1:length(Generators);
@@ -119,26 +118,39 @@ available[6,:] .=solar_cf;
 @constraint(Q, load[t in T], sum(y[:,t])+ n[t] == demand[t]);
 
 set_silent(Q)
-
 ```
+
 ## Problem 1.5
-use code from part 4
 ```julia
 optimize!(Q)
-objective_value(Q)
-print(value.(x))
-value.(y)
+total_cost = objective_value(Q)
+energy_sources = (value.(x))
 notserved= sum(value.(n))
-println(notserved)
+
+value.(y)
+
+println(round(energy_sources[1], digits =3), " MW via Geothermal Production.");
+println(round(energy_sources[2], digits =3), " MW via Coal Production.");
+println(round(energy_sources[3], digits =3), " MW via CCGT Production.");
+println(round(energy_sources[4], digits =3), " MW via CT Production.");
+println(round(energy_sources[5], digits =3), " MW via Wind Production.");
+println(round(energy_sources[6], digits =3), " MW via Solar Production.");
+println("Total annual cost is \$", round(total_cost, digits = 5));
+println(notserved, " MW of energy goes non-served.");
 ```
-Write out answers/ round them
 
 ## Problem 1.6
-two plots to show production over time
 ```julia
-
-
+plot((value.(y).data)', title = "Segmented Energy Production (Hourly)", xlabel = "Time of Day (hours)",
+ylabel = "Energy Production (MW)", label = permutedims(Generators))
+areaplot((value.(y).data)', title = "Segmented Energy Production (Hourly)", xlabel = "Time of Day (hours)",
+ylabel = "Energy Production (MW)", label = permutedims(Generators))
+plot!(demand, color=:red, label="Demand", linestyle=:dash)
 ```
+takeaways: There exist several takeaways from this graph. 
+
+
+
 # Problem 2
 
 ## Problem 2.1
