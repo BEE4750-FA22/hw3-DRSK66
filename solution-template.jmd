@@ -222,10 +222,45 @@ areaplot((value.(y).data)', title = "Segmented Energy Production\n with Emission
 ylabel = "Energy Production (MW)", label = permutedims(Generators))
 plot!(demand, color=:red, label="Demand", linestyle=:dash)
 ```
+Differneces:
+
+
+
 ## Problem 2.5
-redo 2.3
 ```julia
+Generators = ["Geothermal", "Coal", "CCGT", "CT", "Wind", "Solar"];
+G = 1:length(Generators);
+T= hours;
+Q2 = Model(HiGHS.Optimizer);
+nseCost = 1000;
+maxP = 1501000
+
+@variable(Q2, x[G]>=0);
+@variable(Q2, y[G,T] >= 0);
+@variable(Q2, n[T] >=0);
+
+@objective(Q2, Min, investment_cost'* x + 365*(sum(op_cost'*y) + sum(n)*nseCost))
+
+available = zeros(length(G), length(T));
+available[1,:] .=thermal_cf[1];
+available[2,:] .=thermal_cf[2];
+available[3,:] .=thermal_cf[3];
+available[4,:] .=thermal_cf[4];
+available[5,:] .=wind_cf;
+available[6,:] .=solar_cf;
 
 
+@constraint(Q2,avail[g in G, t in T],y[g,t] <= available[g,t] *x[g]);
+@constraint(Q2, load[t in T], sum(y[:,t])+ n[t] == demand[t]);
+@constraint(Q2, pollution[g in G], 365*(sum(y[g,:])*co2_emissions[g]) <= maxP);
+set_silent(Q2)
+optimize!(Q2)
+total_cost1 = objective_value(Q2)
+energy_sources = (value.(x))
+value.(y)
+new_cost = total_cost-total_cost1
+println("Value of additional utility is \$", round(new_cost, digits = 2));
 ```
+
+
 # References
