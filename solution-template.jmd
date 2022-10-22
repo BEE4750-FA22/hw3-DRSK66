@@ -222,7 +222,7 @@ areaplot((value.(y).data)', title = "Segmented Energy Production\n with Emission
 ylabel = "Energy Production (MW)", label = permutedims(Generators))
 plot!(demand, color=:red, label="Demand", linestyle=:dash)
 ```
-Differneces:
+Differences:
 
 
 
@@ -264,3 +264,5 @@ println("Value of additional utility is \$", round(new_cost, digits = 2));
 
 
 # References
+I got help from Ian Shen-Costello
+Lectures 11 & 13.
