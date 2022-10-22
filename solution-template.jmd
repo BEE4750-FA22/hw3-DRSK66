@@ -31,29 +31,144 @@ solar_cf = [0, 0, 0, 0, 0, 0, 0.20, 0.57, 0.80, 0.93, 0.99, 0.99, 0.85, 0.99, 0.
 ```
 
 # Problem 1
+```julia
+using JuMP
+using Plots
+using HiGHS
 
+
+```
 ## Problem 1.1
+The decision variables for this model include the ultimate production capacity for each energy generation type, and the actual energy output at a given time
+for each generator constructed.
+
+Theoretical Production Capacity (MW) = $x_G$ with G representing the type of energy generated. G = {Geothermal, Coal, CCGT, CT, Wind, Solar}
+
+Energy Output at time t (MW) = $y_{G,t}$
+
+Nonserved energy values (MW) at a particular time t = $n_t$
+
 
 ## Problem 1.2
+The objective function  to minimize total costs of building and operating the expansion plan is to minimize the annual capital investment cost, O&M costs, and the unserved energy cost, 
+which all aggregate to Total Cost $Z$. This can be expressed mathematically as:
+
+Initial investment cost for plant $G$ (per MW-year) = $C_G^{INV}$
+
+O&M Costs (per MWh) for plant $G$ = $C_G^{OP}$
+
+Unserved Energy costs  = $C_t^{NSE}$ 
+
+Time passed (for now is equal to a year but so that no hardcoding) = $L_t$
+
+
+Overall evaluate out to:
+```math
+min Z = \sum_G C_G^{INV} x_G + 365 \sum_G \sum_t L_t C_G^{OP} y_{G,t} + 365 \sum_t L_t C_t^{NSE} n_t
+```
+
+
 
 ## Problem 1.3
+There exist several physical constraints on this system.
+The first one is that no generator can produce more energy than it is physically capable of:
+```math
+y_{G,t}≤ x_G CF_G
+```
+
+Additionally, demand at time t $D_t$ has to equal total energy production at t + unserved demand at t:
+```math
+\sum_G y_{G,t} + n_t = D_t
+```
+
+Lastly, production outputs cannot be negative:
+```math
+x_G ≥ 0 \\
+y_{G,t} ≥ 0 \\
+n_t ≥ 0 \\
+```
+My set of constraints is complete as all physical limitations (need to produce between 0 and x_G at time t) are accounted for. Additionally,
+unmet demand has to be positive, and the sum of met and unmet demand sums to the total demand from clients. If unmet demand is 0 or more, then 
+it is impossible to produce moreelectriity than is required, making a 4th constraint obsolete.
 
 ## Problem 1.4
+basically using solver
+```julia
+Generators = ["Geothermal", "Coal", "CCGT", "CT", "Wind", "Solar"];
+G = 1:length(Generators);
+T= hours;
+Q = Model(HiGHS.Optimizer);
+nseCost = 1000;
 
+@variable(Q, x[G]>=0);
+@variable(Q, y[G,T] >= 0);
+@variable(Q, n[T] >=0);
+
+@objective(Q, Min, investment_cost'* x + 365*(sum(op_cost'*y) + sum(n)*nseCost))
+
+available = zeros(length(G), length(T));
+available[1,:] .=thermal_cf[1];
+available[2,:] .=thermal_cf[2];
+available[3,:] .=thermal_cf[3];
+available[4,:] .=thermal_cf[4];
+available[5,:] .=wind_cf;
+available[6,:] .=solar_cf;
+
+
+@constraint(Q,avail[g in G, t in T],y[g,t] <= available[g,t] *x[g]);
+@constraint(Q, load[t in T], sum(y[:,t])+ n[t] == demand[t]);
+
+set_silent(Q)
+
+```
 ## Problem 1.5
+use code from part 4
+```julia
+optimize!(Q)
+objective_value(Q)
+print(value.(x))
+value.(y)
+notserved= sum(value.(n))
+println(notserved)
+```
+Write out answers/ round them
 
 ## Problem 1.6
+two plots to show production over time
+```julia
 
+
+```
 # Problem 2
 
 ## Problem 2.1
+add 1 constraint and rewrite the equation
+```julia
 
+
+```
 ## Problem 2.2
+rerun 1.4 with new constraint
+```julia
 
+
+```
 ## Problem 2.3
+rerun 1.5
+```julia
 
+
+```
 ## Problem 2.4
+copy 1.6
+```julia
 
+
+```
 ## Problem 2.5
+redo 2.3
+```julia
 
+
+```
 # References
