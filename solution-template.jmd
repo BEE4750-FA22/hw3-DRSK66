@@ -42,27 +42,24 @@ using HiGHS
 The decision variables for this model include the ultimate production capacity for each energy generation type, and the actual energy output at a given time
 for each generator constructed.
 
-Theoretical Production Capacity (MW) = $x_G$ with G representing the type of energy generated. G = {Geothermal, Coal, CCGT, CT, Wind, Solar}
-
-Energy Output at time t (MW) = $y_{G,t}$
-
-Nonserved energy values (MW) at a particular time t = $n_t$
+Theoretical Production Capacity (MW) = $x_G$ with G representing the type of energy generated (Geothermal, Coal, CCGT, CT, Wind, or Solar).
+Energy Output (MW) at time $t$ from generator type G = $y_{G,t}$.
+Non-served energy values (MW) at a particular time $t$ = $n_t$.
 
 
 ## Problem 1.2
 The objective function  to minimize total costs of building and operating the expansion plan is to minimize the annual capital investment cost, O&M costs, and the unserved energy cost, 
 which all aggregate to Total Cost $Z$. This can be expressed mathematically as:
 
-Initial investment cost for plant $G$ (per MW-year) = $C_G^{INV}$
+Initial investment cost for plant type $G$ (per MW-year) = $C_G^{INV}$.
 
-O&M Costs (per MWh) for plant $G$ = $C_G^{OP}$
+O&M Costs (per MWh) for plant $G$ = $C_G^{OP}$.
 
-Unserved Energy costs  = $C_t^{NSE}$ 
+Non-served Energy Cost  = $C_t^{NSE}$.
 
-Time passed (for now is equal to a year but so that no hardcoding) = $L_t$
+Time elapsed = $L_t$.
 
-
-Overall evaluate out to:
+Combined this evaluates to:
 ```math
 min Z = \sum_G C_G^{INV} x_G + 365 \sum_G \sum_t L_t C_G^{OP} y_{G,t} + 365 \sum_t L_t C_t^{NSE} n_t
 ```
@@ -76,9 +73,9 @@ The first one is that no generator can produce more energy than it is physically
 y_{G,t}≤ x_G CF_G
 ```
 
-Additionally, demand at time t $D_t$ has to equal total energy production at t + unserved demand at t:
+Additionally, demand at time $t$, $D_t$, has to equal total energy production at $t$ + non-served demand at $t$:
 ```math
-\sum_G y_{G,t} + n_t = D_t
+\sum_G y_{G,t} + \sum_t n_t = \sum D_t
 ```
 
 Lastly, production outputs cannot be negative:
@@ -87,7 +84,7 @@ x_G ≥ 0 \\
 y_{G,t} ≥ 0 \\
 n_t ≥ 0 \\
 ```
-My set of constraints is complete as all physical limitations (need to produce between 0 and x_G at time t) are accounted for. Additionally,
+This set of constraints is complete as all physical limitations (such as the need to produce between 0 and $x_G$ at time $t$) are accounted for. Additionally,
 unmet demand has to be positive, and the sum of met and unmet demand sums to the total demand from clients. If unmet demand is 0 or more, then 
 it is impossible to produce moreelectriity than is required, making a 4th constraint obsolete.
 
@@ -147,8 +144,13 @@ areaplot((value.(y).data)', title = "Segmented Energy Production (Hourly)", xlab
 ylabel = "Energy Production (MW)", label = permutedims(Generators))
 plot!(demand, color=:red, label="Demand", linestyle=:dash)
 ```
-takeaways: There exist several takeaways from this graph_________________. 
-
+Takeaways: There exist several takeaways from this graph, with the most prominant being the ability for solar energy to almost completely power demand during
+peak sunlight hours, even though that is also approximately when the most demand exists as well. Furthermore, the concept of always utilizing the source with the 
+lowest marginal cost to the environment can be seen. Geothermal and coal power at no point have the best ratio of emissions to cost savings, and as such are never used. 
+Conversely, solar and wind have the lowest marginal costs, so across the map (solar primarily is used when there is sunlight and wind energy only can be 
+generated when there is sufficient wind, which occurs predominantly at night time. My takeaway from this is that more investments in battery storage is needed,
+since renewables CAN power most if not all of the grid's demands, but due to geological constraints these forms of energy are not always able to be used, thus battery storage 
+would allow for scaling up of these systems and allow for further transition to renewables.
 
 
 # Problem 2
@@ -159,7 +161,7 @@ of emissions below the legal threshold of 1.5MT of CO2. However,
  the objective and decision varables will still remain the same. This new constraint can be denoted as:
 
 ```math
-365 \sum_G \sum_t CO2_G ≤ 1.5 \text{MT of CO2/ year}
+365 \sum_G CO2_G ≤ 1.5 \text{MT of CO2/ year}
 ```
 ## Problem 2.2
 ```julia
@@ -210,7 +212,11 @@ println(round(energy_sources[6], digits =3), " MW via Solar Production.");
 println("Total annual cost is \$", round(total_cost, digits = 5));
 println(notserved, " MW of energy goes non-served.");
 ```
-Differences:
+Differences: The major differences from the plan from problem 1 is that with the emissions cap in place, the distribution
+is significantly more heavily weighted towards renewables (aka solar and wind). While the demand for energy remains the same, 
+wind production increases from 1238 MW to 2669 MW, and solar from 2729 MW to 3015 MW. The majority of this redistrubution 
+comes from decreases in production of CCGT, which decreases from 1704 MW to 814 MW, although CT has a similar increase in usage from 881 MW to 
+1551 MW. All of this results in an increased cost of ~$20m USD per year.
 
 
 
@@ -222,7 +228,9 @@ areaplot((value.(y).data)', title = "Segmented Energy Production\n with Emission
 ylabel = "Energy Production (MW)", label = permutedims(Generators))
 plot!(demand, color=:red, label="Demand", linestyle=:dash)
 ```
-Differences:
+Differences: reaffirming what the raw data appeared to indicate, while changeds to solar, geothermal, and coal
+usage were minimal, the proportion of energy from CCGT is drastically cut. Associated increases in wind energy production 
+and CT generation can be seen taking over the majority of the purple space that once was comprised of energy from CCGT.
 
 
 
@@ -264,5 +272,5 @@ println("Value of additional utility is \$", round(new_cost, digits = 2));
 
 
 # References
-I got help from Ian Shen-Costello
+I got help from Ian Shen-Costello.
 Lectures 11 & 13.
